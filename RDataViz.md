@@ -1,6 +1,6 @@
 RDataViz
 ========================================================
-author: 
+author: Wade Cooper
 date: 
 
 RDataViz
@@ -18,13 +18,14 @@ Overview
 Steps to run RDataViz:  
  - Save a dataset on your computer 
  - Go to https://wtcooper.shinyapps.io/RDataViz  
- - Click on "Choose File" button
+ - Click on "Choose File" button on the "Choose File" tab
+ - After loading a dataset, click through the tabs at top to explore
 
 
 Data Table and Summary
 ========================================================
 
-After loading a file, the data will be presented as an interactive Data Table (Data Table tab) a summary will be provided on the opening tab (Choose File):
+After loading a file, a data summary will be provided on the "Choose File" tab (example below), and the data will also be presented in tabular format ("Data Table" tab), providing quick sorting and searching.  
 
 
 ```
@@ -82,7 +83,7 @@ virginica (50, 33%)
 Heatmap
 ========================================================
 
- - A heatmap representation of the data is provided (Heatmap tab) in order to visualize the relationships between columns.  Note: the data are scaled between 0-1: 
+ - A heatmap representation of the data is provided ("Heatmap"" tab) in order to visualize relationships between columns.  Note: the data are scaled between 0-1, and any factor level variables can be dummy coded (aka one-hot encoded): 
 
 ![plot of chunk unnamed-chunk-2](RDataViz-figure/unnamed-chunk-2-1.png) 
 
@@ -92,7 +93,7 @@ Heatmap
 Distribution
 ========================================================
 
- - The raw distribution of the data are presented (Distribution tab):
+ - The "Distribution" tab provides a raw data plot to visualize the range of the data and potential outliers (showing the standard deviations from the mean for each data point), and a histogram to see the distribution.  
 
 ![plot of chunk unnamed-chunk-3](RDataViz-figure/unnamed-chunk-3-1.png) 
 
@@ -101,7 +102,7 @@ Distribution
 vizrd
 ========================================================
 
-Once can also install the related R package 'vizrd' to interactively launch an R data.frame:
+One can also install the related R package 'vizrd' to interactively launch an a similar data explorer from the R console directly for any R data set.  The package can be installed as follows:
 
 
 
