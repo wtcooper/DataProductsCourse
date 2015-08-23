@@ -1,0 +1,116 @@
+RDataViz
+========================================================
+author: 
+date: 
+
+RDataViz
+========================================================
+
+Question: 
+  What's the best way to understand my data? 
+
+Answer: 
+  Interactively, of course! 
+
+Overview
+========================================================
+
+Steps to run RDataViz:  
+ - Save a dataset on your computer 
+ - Go to https://wtcooper.shinyapps.io/RDataViz  
+ - Click on "Choose File" button
+
+
+Data Table and Summary
+========================================================
+
+After loading a file, the data will be presented as an interactive Data Table (Data Table tab) a summary will be provided on the opening tab (Choose File):
+
+```{r, echo=FALSE, font.size=10}
+library(Hmisc)
+data(iris)
+describe(iris)
+```
+
+
+
+
+
+
+
+Heatmap
+========================================================
+
+ - A heatmap representation of the data is provided (Heatmap tab) in order to visualize the relationships between columns.  Note: the data are scaled between 0-1: 
+
+```{r, echo=FALSE, fig.height=6, fig.width=12}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+
+data(iris) 
+dat=iris %>% select(-Species)
+dat = as.data.frame(apply(dat, 2, rescale))
+dat=dat[1:50,]
+dat$obs = factor(length(dat[,1]):1, levels=as.character(length(dat[,1]):1))
+plotDatLong = dat %>% gather(Variable, Value, -obs) %>% filter(!is.na(Value))
+plotDatLong$Value=round(plotDatLong$Value, digits=1)
+            
+base_size <- 12
+p <- ggplot(plotDatLong, aes(x=Variable, y=obs, fill=Value)) + 
+geom_tile(colour = "white") + 
+scale_fill_gradient(low = "white", high = "steelblue") + 
+theme_gray(base_size = base_size) + 
+labs(x = "",y = "") + 
+scale_x_discrete(expand = c(0, 0)) +
+scale_y_discrete(expand = c(0, 0)) + 
+theme(
+legend.position = "top", 
+axis.ticks = element_blank(), 
+axis.text.x = element_text(size = base_size , angle = 45, hjust = 1,vjust=1, colour = "grey50"))
+print(p)
+```
+
+
+
+
+Distribution
+========================================================
+
+ - The raw distribution of the data are presented (Distribution tab):
+
+```{r, echo=FALSE, fig.height=6, fig.width=12}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+
+data(iris) 
+dat <- iris[, "Sepal.Length", drop = FALSE]
+names(dat)[1]="Value"
+dat$obs = 1:length(dat[,1])
+dat = dat %>% mutate(StdDeviations=abs(scale(Value)[,1]))
+
+ggplot(data=dat, aes(x=obs, y=Value, fill=StdDeviations)) +
+                geom_point(shape=21, size=4, colour="gray50") +
+                scale_fill_gradientn(limits = c(0,4),colours=c("darkblue", "orangered"), na.value = "red",name = "Standard\nDeviations" ) +
+                xlab("Observation") +
+                ylab("Value") +
+                theme_bw()
+
+```
+
+
+
+vizrd
+========================================================
+
+Once can also install the related R package 'vizrd' to interactively launch an R data.frame:
+
+
+```{r, eval=FALSE}
+# install.packages('devtools')
+library(devtools) 
+devtools::install_github("wtcooper/vizrd") 
+```
