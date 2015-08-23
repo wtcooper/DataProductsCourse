@@ -182,12 +182,14 @@ shinyServer(function(input, output, session) {
             
             ## Remove the factor columns
             dat = dat[, !sapply(dat, is.factor)]
-            
+
+			dat = as.data.frame(apply(dat, 2, rescale))
+			
             if (datlen > input$headobs) {
-              dat = dat %>% sample_n(input$headobs) %>% data.frame()
+				if (input$randbox) dat = dat %>% sample_n(input$headobs) %>% data.frame()
+				else dat = dat %>% head(input$headobs) %>% data.frame()
             }
             
-            dat = as.data.frame(apply(dat, 2, rescale))
             dat$obs = factor(length(dat[,1]):1, levels=as.character(length(dat[,1]):1))
             plotDatLong = dat %>% gather(Variable, Value, -obs) %>% filter(!is.na(Value))
             
