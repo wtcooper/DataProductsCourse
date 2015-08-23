@@ -49,7 +49,7 @@ shinyServer(function(input, output, session) {
             # Create the checkboxes and select them all by default
             checkboxGroupInput("columns", "Choose columns:", 
                 choices  = colnames,
-                selected = colnames)
+                selected = colnames[1:max(10,length(colnames))])
           })
       
       
@@ -109,7 +109,7 @@ shinyServer(function(input, output, session) {
       # Filter data based on selections
       output$table <- renderDataTable({
             
-            if(is.null(is.null(input$datfile)))
+            if(is.null(input$datfile))
               return()
             
             # Get the data set with the appropriate name
@@ -139,7 +139,7 @@ shinyServer(function(input, output, session) {
             
             
             
-            if(is.null(is.null(input$datfile)))
+            if(is.null(input$datfile))
               return(defPlot)
             
             # Get the data set with the appropriate name
@@ -182,7 +182,6 @@ shinyServer(function(input, output, session) {
             
             ## Remove the factor columns
             dat = dat[, !sapply(dat, is.factor)]
-            
             
             if (datlen > input$headobs) {
               dat = dat %>% sample_n(input$headobs) %>% data.frame()
@@ -228,7 +227,7 @@ shinyServer(function(input, output, session) {
       
       
       ###############################
-      ## Heatmap plot
+      ## Distributional plots
       ###############################
       
       ## Do up the heatmap - if add reactivity (e.g., dummies) then
@@ -237,47 +236,70 @@ shinyServer(function(input, output, session) {
       densDat <- reactive({
             
             ## Set up a default plot to return 
-            defPlot = data.frame(Variable=c("a","b"), obs=1:10, Value=rnorm(10)) %>% mutate(obs=as.factor(obs)) 
+            defPlot = data.frame(Value=1:10, obs=1:10, StdDeviations=0) 
             
             
-            if(is.null(is.null(input$datfile)))
+            if(is.null(input$datfile))
               return(defPlot)
             
             # Get the data set with the appropriate name
             dat <- getData()
-            # Remove any factor or character variables
-            dat = dat[, !sapply(dat, is.factor)]
-            dat = dat[, !sapply(dat, is.character)]
             
             
-            
+            ## Check to make sure the selected column is set 
             if (is.null(input$selectcol) || !(input$selectcol %in% names(dat)))
               return(defPlot)
+            ## Check if a sample of observations is set 
+            if(is.null(input$distobs))
+              return(defPlot)
+            
             
             ## filter out the observations and others
-            dat <- dat[, input$columns, drop = FALSE]
+            dat <- dat[, input$selectcol, drop = FALSE]
+            names(dat)[1]="Value"
+            
+            ## get sample of observations
+            datlen = length(dat[,1])
+            
+            if (datlen > input$distobs) {
+              dat = dat %>% sample_n(input$distobs) %>% data.frame()
+            }
             
             
-            dat = as.data.frame(apply(dat, 2, rescale))
-            dat$obs = factor(length(dat[,1]):1, levels=as.character(length(dat[,1]):1))
-            plotDatLong = dat %>% gather(Variable, Value, -obs) %>% filter(!is.na(Value))
+#            dat$obs = factor(length(dat[,1]):1, levels=as.character(length(dat[,1]):1))
+            dat$obs = 1:length(dat[,1])
+            dat = dat %>% mutate(StdDeviations=abs(scale(Value)[,1]))
+#            dat$StDev = scale(dat$Value)[,1] 
+            
             
           })
       
-      heatDat %>% ggvis(~Variable, ~obs, fill=~Value) %>%
-          layer_rects(width = band(), height = band()) %>%
-          add_tooltip(function(data){
-                paste0("Variable: ", data$Variable, "<br>", "Value: ",as.character(data$Value))
+      .range=c("darkblue", "orangered")
+      .domain=c(1,3)
+      
+      densDat %>% 
+          ggvis(~obs, ~Value, fill=~StdDeviations) %>%
+          layer_points(size := 100, fillOpacity := 0.7) %>%
+          scale_numeric("fill", range = .range, domain=.domain) %>%
+          add_tooltip(function(densDat){
+                paste0("Value: ",as.character(densDat$Value))
               }, "hover") %>%
-          scale_nominal("x", padding = 0, points = FALSE) %>%
-          scale_nominal("y", padding = 0, points = FALSE) %>% 
-          set_options(height = 700, width=700) %>%  
-#     add_axis("y", title = "") %>% 
-#     add_axis("x", title = "") %>% #, properties = axis_props(
-#         labels = list(angle = -45, align = "right"))) %>%
-          bind_shiny("heatplot") #, "plot_ui")
+          bind_shiny("rawplot") #, "plot_ui")
       
       
+      
+      ## set up for histogram
+      bin_size <- reactive({
+            if(is.null(input$binsize))
+              return(1)
+            input$binsize
+          })
+      
+      
+      densDat %>%  
+          ggvis(~Value) %>%
+          layer_histograms(width=bin_size, fillOpacity := 0.7) %>%
+          bind_shiny("histplot")
       
       
       
